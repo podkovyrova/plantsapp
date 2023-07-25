@@ -1,7 +1,10 @@
 package com.example.plants
 
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.plants.databinding.ActivityMainBinding
@@ -9,22 +12,18 @@ import com.example.plants.databinding.ActivityMainBinding
 class MainActivity : AppCompatActivity() {
     lateinit var binding: ActivityMainBinding
     private val adapter = PlantAdapter()
-
-    private val imageIdList = listOf(
-        R.drawable.image_01,
-        R.drawable.image_02,
-        R.drawable.image_03,
-        R.drawable.image_04,
-        R.drawable.image_05
-    )
-
-    private var index = 0
+    private var editLauncher: ActivityResultLauncher<Intent>? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         init()
+        editLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+            if (it.resultCode == RESULT_OK) {
+                adapter.addPlant(it.data?.getSerializableExtra("plant") as Plant)
+            }
+        }
     }
 
     private fun init() {
@@ -32,10 +31,7 @@ class MainActivity : AppCompatActivity() {
             recyclerView.layoutManager = GridLayoutManager(this@MainActivity, 3)
             recyclerView.adapter = adapter
             button.setOnClickListener {
-                if (index > 4) index = 0
-                val plant = Plant(imageIdList[index], "Plant $index")
-                adapter.addPlant(plant)
-                index++
+                editLauncher?.launch(Intent(this@MainActivity, EditActivity::class.java))
             }
         }
     }
